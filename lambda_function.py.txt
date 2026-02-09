@@ -1,0 +1,33 @@
+import json
+import boto3
+from datetime import datetime
+
+def lambda_handler(event, context):
+    # Print event details for CloudWatch logs
+    print("File received from S3 event!")
+    print(json.dumps(event))
+
+    # Get S3 details from event
+    bucket_name = event['Records'][0]['s3']['bucket']['name']
+    file_name = event['Records'][0]['s3']['object']['key']
+
+    # Log processing info
+    print(f"Processing file: {file_name} from bucket: {bucket_name}")
+
+    # Example: Save metadata to DynamoDB (optional)
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('reportTable')  # Your DynamoDB table name
+
+    table.put_item(
+        Item={
+            'FileName': file_name,
+            'BucketName': bucket_name,
+            'ProcessedTime': str(datetime.utcnow()),
+            'Status': 'Processed'
+        }
+    )
+
+    return {
+        'statusCode': 200,
+        'body': 'File processed successfully'
+    }
